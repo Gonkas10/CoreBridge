@@ -156,7 +156,8 @@ def money(x, ccy):
     return "—" if x is None or pd.isna(x) else f"{x:,.2f} {ccy}"
 
 
-def build_report(df: pd.DataFrame, today: str, prev: pd.DataFrame | None, n_ok: int, n_total: int):
+def select(df: pd.DataFrame):
+    """Devolve (oportunidades, lista de observação), ordenadas por score."""
     eligible = df[
         (df.qualidade >= MIN_QUALITY) & (df.n_alertas <= MAX_FLAGS) & df.margem_seguranca.notna()
     ]
@@ -164,6 +165,11 @@ def build_report(df: pd.DataFrame, today: str, prev: pd.DataFrame | None, n_ok: 
     watch = eligible[
         (eligible.margem_seguranca >= WATCH_MARGIN) & (eligible.margem_seguranca < MIN_MARGIN)
     ].sort_values("score", ascending=False)
+    return picks, watch
+
+
+def build_report(df: pd.DataFrame, today: str, prev: pd.DataFrame | None, n_ok: int, n_total: int):
+    picks, watch = select(df)
 
     prev_picks = set(prev.ticker) if prev is not None else set()
     cur = set(picks.ticker.head(15))
@@ -285,7 +291,13 @@ def main(argv=None):
     out.mkdir(parents=True, exist_ok=True)
     today = dt.date.today().isoformat()
     prev_file = out / "latest_picks.csv"
-    prev = pd.read_csv(prev_file) if prev_file.exists() else None
+    hist = out / "history.csv"
+    prev = None
+    if hist.exists():  # escolhas do último dia anterior a hoje (correr 2x no mesmo dia não estraga a comparação)
+        h_all = pd.read_csv(hist)
+        before = h_all[h_all.data < today]
+        if not before.empty:
+            prev = before[before.data == before.data.max()]
 
     report, picks = build_report(df, today, prev, len(df), len(tickers))
     (out / f"{today}.md").write_text(report, encoding="utf-8")
@@ -293,10 +305,19 @@ def main(argv=None):
     df.sort_values("score", ascending=False).to_csv(out / "latest_full.csv", index=False)
     picks.head(15).to_csv(prev_file, index=False)
 
-    hist = out / "history.csv"
+    snap_dir = out / "data" / "snapshots"
+    snap_dir.mkdir(parents=True, exist_ok=True)
+    df.sort_values("score", ascending=False).to_csv(snap_dir / f"{today}.csv", index=False)
+
     h = picks.head(15)[["ticker", "nome", "preco", "moeda", "valor_intrinseco", "margem_seguranca", "qualidade"]].copy()
     h.insert(0, "data", today)
-    h.to_csv(hist, mode="a", header=not hist.exists(), index=False)
+    if hist.exists():
+        old = pd.read_csv(hist)
+        h = pd.concat([old[old.data != today], h], ignore_index=True)
+    h.to_csv(hist, index=False)
+
+    from . import dashboard
+    dashboard.build(out)
 
     print(report)
     print(f"\n[{len(df)}/{len(tickers)} ações em {time.time() - t0:.0f}s]", file=sys.stderr)

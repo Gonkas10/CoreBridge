@@ -4,10 +4,17 @@ Screener automático que, todos os dias úteis, analisa ~280 grandes empresas do
 e identifica ações que negoceiam **abaixo do valor intrínseco estimado**, com boa qualidade
 financeira e sem sinais claros de *value trap*.
 
+- **Painel com gráficos e evolução histórica: [`reports/DASHBOARD.md`](reports/DASHBOARD.md)**
 - Relatório do dia: [`reports/latest.md`](reports/latest.md)
 - Histórico de relatórios: `reports/AAAA-MM-DD.md`
 - Dados completos de todas as ações: `reports/latest_full.csv`
 - Histórico das escolhas (para medir resultados): `reports/history.csv`
+- Indicadores diários (EUA vs Europa, nº de oportunidades): `reports/daily_summary.csv`
+- Desempenho de cada escolha vs. universo: `reports/performance.csv`
+- Snapshot completo de cada dia: `reports/data/snapshots/AAAA-MM-DD.csv`
+
+Os CSV são públicos e alimentam também a folha Google Sheets (via `IMPORTDATA`), que se
+atualiza sozinha depois de cada corrida diária.
 
 ## Como correr
 
