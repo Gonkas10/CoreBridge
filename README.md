@@ -4,6 +4,7 @@ Screener automático que, todos os dias úteis, analisa ~280 grandes empresas do
 e identifica ações que negoceiam **abaixo do valor intrínseco estimado**, com boa qualidade
 financeira e sem sinais claros de *value trap*.
 
+- **ETF pessoal (carteira de 25 empresas para DCA): [`etf/README.md`](etf/README.md)**
 - **Painel com gráficos e evolução histórica: [`reports/DASHBOARD.md`](reports/DASHBOARD.md)**
 - Relatório do dia: [`reports/latest.md`](reports/latest.md)
 - Histórico de relatórios: `reports/AAAA-MM-DD.md`
